@@ -1,0 +1,656 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  한국 근대문학 지칭어 온톨로지 v4
+  
+  
+  v3 → v4 변경:
+  1. ambiguity 속성 제거 — contextRule 유무로 자동 판단
+  2. 멀티라벨: entry가 복수의 type을 가질 수 있음 (형태적 + 화용적)
+  3. 필수 속성 2개만: formality, polarity
+  4. 골드 스탠다드는 ref만 — 범주 정보는 온톨로지에만 존재
+  
+  설계 원칙:
+  - TEI <taxonomy>/<category> 골격 유지 (기존 TEI 본문 태깅과 호환)
+  - 온톨로지적 확장은 TEI customization 범위 내에서 수행
+  - LLM 프롬프트에 XSD/XML 그대로 주입
+-->
+
+<taxonomy xml:id="ko-lit-referring-ontology" n="v4">
+  <desc>한국 근대문학 인물 지칭어 온톨로지: 분류 체계 + 속성 + 관계 + 맥락 규칙</desc>
+
+  <!--
+    ============================================================
+    PART A: 속성 정의 (Property Definitions)
+    - 모든 entry가 가질 수 있는 속성의 값 목록(value list)
+    - LLM 프롬프트 변환 시 "이 표현의 특성" 설명에 사용
+    ============================================================
+  -->
+  <desc type="propertyDefinitions">
+    <!--
+      formality: 격식/화계 수준
+      값: formal(격식/존대) | neutral(중립) | informal(비격식/하대) | vulgar(비속)
+    -->
+    <!--
+      polarity: 감정 극성 / 화행 의도
+      값: positive(긍정/친밀) | neutral(중립) | negative(부정/적대) | ambivalent(양가적)
+    -->
+    <!--
+      animacy: 대상의 유정성 / 존재론적 상태
+      값: animate(유정/생존) | deceased(사망) | objectified(사물화)
+    -->
+    <!--
+      dialectRegion: 방언 지역
+      값: standard(표준어) | pyeongan(평안도) | gyeongsang(경상도) | other
+    -->
+    <!--
+      genderSpec: 성별 특정성
+      값: masculine | feminine | unspecified
+    -->
+    <!-- ambiguity 속성은 v4에서 제거됨: contextRule 유무로 자동 판단 -->
+  </desc>
+
+  <!--
+    ============================================================
+    PART B: 분류 체계 + 표현 등록 (Taxonomy with Entries)
+    - v2의 <category> 계층 유지
+    - 각 범주 안에 <entry> 추가: 구체적 표현 + 속성 명시
+    - 맥락 의존 표현은 contextRule 요소로 처리 (v4: ambiguity 속성 제거)
+    ============================================================
+  -->
+
+  <!-- ==================== 1. 대명사 (pronoun) ==================== -->
+  <category xml:id="pronoun">
+    <catDesc>대명사: 인물을 대명사로 지칭하는 경우</catDesc>
+
+    <category xml:id="pronoun.first">
+      <catDesc>1인칭 대명사</catDesc>
+      <entry xml:id="expr.na" formality="informal" polarity="neutral">
+        <form>나</form>
+        <note>variants: 내, 난</note>
+        <example src="운수_좋은_날" loc="127">"오늘 내가 돈을 막 벌었어" (KC)</example>
+      </entry>
+      <entry xml:id="expr.jeo" formality="formal" polarity="neutral">
+        <form>저</form>
+        <note>겸양 1인칭</note>
+      </entry>
+    </category>
+
+    <category xml:id="pronoun.second">
+      <catDesc>2인칭 대명사</catDesc>
+      <entry xml:id="expr.neo" formality="informal" polarity="neutral">
+        <form>너</form>
+      </entry>
+      <entry xml:id="expr.jane" formality="neutral" polarity="neutral">
+        <form>자네</form>
+        <note>동년배 간 중립적 2인칭</note>
+        <example src="운수_좋은_날" loc="119">"자네 문안 들어갔다 오는 모양일세그려" (CS→KC)</example>
+      </entry>
+      <entry xml:id="expr.dangsin" formality="formal" polarity="neutral">
+        <form>당신</form>
+        <type>pronoun.second</type>
+        <type>address.respectful</type>
+        <type>address.intimate</type>
+        <note>존대(낯선 상대) / 부부 간(중립~하대) / 적대적 맥락(도전) — 맥락 의존</note>
+        <contextRule>
+          <condition context="spouse-to-spouse">formality→informal, polarity→neutral|negative</condition>
+          <condition context="stranger-formal">formality→formal, polarity→neutral</condition>
+          <condition context="confrontational">formality→formal(표면), polarity→negative(실질)</condition>
+        </contextRule>
+      </entry>
+      <entry xml:id="expr.nimja" formality="informal" polarity="neutral" dialectRegion="pyeongan">
+        <form>님자</form>
+        <note>평안도 방언 '임자'. 부부 간 2인칭.</note>
+        <relation type="standardForm" target="#expr.imja"/>
+        <example src="감자">"님자 치우시관" (BGH→BG)</example>
+      </entry>
+    </category>
+
+    <category xml:id="pronoun.third">
+      <catDesc>3인칭 대명사</catDesc>
+      <entry xml:id="expr.geu" formality="neutral" polarity="neutral" genderSpec="masculine">
+        <form>그</form>
+        <example src="운수_좋은_날" loc="101">"그의 가슴을 눌렀다" (서술자→KC)</example>
+      </entry>
+      <entry xml:id="expr.geunyeo" formality="neutral" polarity="neutral" genderSpec="feminine">
+        <form>그녀</form>
+        <note>근대문학에서 사용 빈도 낮음. 이광수 이후 점진적 확산.</note>
+      </entry>
+    </category>
+
+    <category xml:id="pronoun.reflexive">
+      <catDesc>재귀대명사</catDesc>
+      <entry xml:id="expr.jagi" formality="neutral" polarity="neutral">
+        <form>자기</form>
+        <type>pronoun.reflexive</type>
+        <type>pronoun.second</type>
+        <note>재귀 용법 vs. 부부 간 2인칭 호칭 — 맥락 의존</note>
+        <contextRule>
+          <condition context="narrator-describing-character">category→pronoun.reflexive</condition>
+          <condition context="spouse-address">category→pronoun.second (구어체)</condition>
+        </contextRule>
+        <example src="운수_좋은_날" loc="102">"자기의 머리에 떠오르는" (서술자→KC, 재귀)</example>
+      </entry>
+      <entry xml:id="expr.je" formality="neutral" polarity="neutral">
+        <form>제</form>
+        <example src="운수_좋은_날" loc="103">"제 손에 쥠에" (서술자→KC)</example>
+      </entry>
+    </category>
+
+    <category xml:id="pronoun.demonstrative">
+      <catDesc>지시대명사 (인물 지시 용법)</catDesc>
+      <entry xml:id="expr.igeot" formality="informal" polarity="negative">
+        <form>이것</form>
+        <type>pronoun.demonstrative</type>
+        <type>invective.objectifying</type>
+        <note>사물 지시 vs. 인물 비하 지시 — 맥락 의존</note>
+        <contextRule>
+          <condition context="ref-to-person">category→pronoun.demonstrative, polarity→negative (사물화 뉘앙스)</condition>
+          <condition context="ref-to-object">category→N/A (인물 지칭 아님)</condition>
+        </contextRule>
+        <example src="운수_좋은_날" loc="163">"이것 봐, 아무 말이 없네" (KC→AW)</example>
+      </entry>
+    </category>
+  </category>
+
+  <!-- ==================== 2. 친족 호칭 (kinship) ==================== -->
+  <category xml:id="kinship">
+    <catDesc>친족 호칭: 가족·혈연 관계에 기반한 지칭</catDesc>
+
+    <category xml:id="kinship.spouse">
+      <catDesc>배우자 지칭</catDesc>
+      <entry xml:id="expr.manura" formality="informal" polarity="neutral" genderSpec="feminine">
+        <form>마누라</form>
+        <example src="운수_좋은_날" loc="141">"우리 마누라가 죽었다네" (KC)</example>
+      </entry>
+      <entry xml:id="expr.nampyeon" formality="neutral" polarity="neutral" genderSpec="masculine">
+        <form>남편</form>
+        <example src="운수_좋은_날" loc="157">"남편이 들어오는데" (KC, 자기지칭)</example>
+      </entry>
+      <entry xml:id="expr.bucheo" formality="neutral" polarity="neutral">
+        <form>부처</form>
+        <note>부부를 하나의 단위로 지칭. 근대 문어체.</note>
+        <example src="감자">"복녀의 부처는 농민이었었다" (서술자→BGH)</example>
+      </entry>
+    </category>
+
+    <category xml:id="kinship.parent">
+      <catDesc>부모 지칭</catDesc>
+      <entry xml:id="expr.eomi" formality="informal" polarity="neutral" genderSpec="feminine">
+        <form>어미</form>
+        <note>'어머니'보다 낮은 격식. 서술자의 거리두기 또는 하층 화자 표지.</note>
+        <example src="운수_좋은_날">"앓는 어미 곁에서" (서술자→AW)</example>
+      </entry>
+    </category>
+
+    <category xml:id="kinship.child">
+      <catDesc>자녀 지칭</catDesc>
+      <entry xml:id="expr.ai" formality="neutral" polarity="neutral">
+        <form>아이</form>
+        <type>kinship.child</type>
+        <type>social.age_gender</type>
+        <contextRule>
+          <condition context="own-child">category→kinship.child</condition>
+          <condition context="generic-young-person">category→social.age_gender</condition>
+        </contextRule>
+      </entry>
+    </category>
+
+    <category xml:id="kinship.in_law">
+      <catDesc>인척 지칭</catDesc>
+      <entry xml:id="expr.jangin" formality="neutral" polarity="neutral" genderSpec="masculine">
+        <form>장인</form>
+        <example src="감자">"장인의 덕으로" (서술자→BGH_F)</example>
+      </entry>
+    </category>
+
+    <category xml:id="kinship.fictive">
+      <catDesc>의사 친족어: 혈연 없이 친족 호칭을 사용하는 경우</catDesc>
+      <entry xml:id="expr.hyeongnim" formality="formal" polarity="positive">
+        <form>형님</form>
+        <type>kinship.extended</type>
+        <type>kinship.fictive</type>
+        <note>실제 형제 vs. 의사 친족 — relation 정보로 판별</note>
+        <contextRule>
+          <condition context="relation[@name='sibling']">category→kinship.extended</condition>
+          <condition context="relation[@name='neighbor'] or no-kinship-relation">category→kinship.fictive</condition>
+        </contextRule>
+        <example src="감자">"형님두 갑세다가례" (BG→동네 여편네, 의사 친족)</example>
+      </entry>
+      <entry xml:id="expr.ajumeonne" formality="neutral" polarity="neutral">
+        <form>아주먼네</form>
+        <contextRule>
+          <condition context="non-kin-older-woman">category→kinship.fictive</condition>
+          <condition context="actual-aunt-by-marriage">category→kinship.extended</condition>
+        </contextRule>
+        <example src="운수_좋은_날" loc="150">"아주먼네가 앓는단 말은 들었는데" (CS→AW)</example>
+      </entry>
+    </category>
+  </category>
+
+  <!-- ==================== 3. 사회적 호칭 (social) ==================== -->
+  <category xml:id="social">
+    <catDesc>사회적 호칭: 직업·신분·역할에 기반한 지칭</catDesc>
+
+    <category xml:id="social.occupation">
+      <catDesc>직업·직함 지칭</catDesc>
+      <entry xml:id="expr.inryeokgeokun" formality="neutral" polarity="neutral">
+        <form>인력거꾼</form>
+        <example src="운수_좋은_날" loc="116">"인력거군이 저렇게 술이 취해가지고" (길가는 사람→KC)</example>
+      </entry>
+    </category>
+
+    <category xml:id="social.status">
+      <catDesc>사회적 신분·지위 지칭</catDesc>
+      <entry xml:id="expr.assi" formality="formal" polarity="positive" genderSpec="feminine">
+        <form>아씨</form>
+        <type>social.status</type>
+        <type>address.respectful</type>
+        <note>존대 호격으로도 사용 → address.respectful과 중복 가능</note>
+        <contextRule>
+          <condition context="said[@who] address-use">category→address.respectful</condition>
+          <condition context="narrator-description">category→social.status</condition>
+        </contextRule>
+        <example src="운수_좋은_날" loc="108">"아씨, 인력거 아니 타시랍시요?" (KC→FS, 호격)</example>
+      </entry>
+    </category>
+
+    <category xml:id="social.relational_role">
+      <catDesc>관계적 역할 지칭</catDesc>
+      <entry xml:id="expr.sonnim" formality="neutral" polarity="neutral">
+        <form>손님</form>
+      </entry>
+      <entry xml:id="expr.chingu" formality="informal" polarity="positive">
+        <form>친구</form>
+        <example src="운수_좋은_날" loc="120">"이 친구를 만난 게" (서술자→CS)</example>
+      </entry>
+      <entry xml:id="expr.eunin" formality="formal" polarity="positive">
+        <form>은인</form>
+        <note>비유적 사용 — 실제 은인이 아닌 심리적 과장</note>
+        <example src="운수_좋은_날" loc="120">"자기를 살려준 은인이나 무엇같이" (서술자→CS)</example>
+      </entry>
+    </category>
+
+    <category xml:id="social.age_gender">
+      <catDesc>나이·성별 기반 지칭</catDesc>
+      <entry xml:id="expr.yeoja" formality="neutral" polarity="neutral" genderSpec="feminine">
+        <form>여자</form>
+        <example src="운수_좋은_날" loc="107">"그 여자의 곁으로 다가들었다" (서술자→FS)</example>
+      </entry>
+      <entry xml:id="expr.yeohaksaeng" formality="neutral" polarity="neutral" genderSpec="feminine">
+        <form>여학생</form>
+        <example src="운수_좋은_날" loc="109">"그 여학생인지 뭔지가" (서술자→FS)</example>
+      </entry>
+      <entry xml:id="expr.eorinai" formality="neutral" polarity="neutral">
+        <form>어린애</form>
+        <example src="운수_좋은_날" loc="156">"어린애의 젖 빠는 소리" (서술자→GD)</example>
+      </entry>
+    </category>
+
+    <category xml:id="social.property">
+      <catDesc>소유·소속 관계 지칭: 다른 인물과의 관계를 통한 간접 지칭</catDesc>
+      <note>패턴: [인물A]의 [관계명사] → 인물B를 지칭
+        예: "그의 친구" → 관계(friendship) 경유 → 치삼
+        TEI 태깅: 중첩 &lt;rs&gt; 필요 — 외부 rs는 피지칭자, 내부 rs는 경유 인물</note>
+      <entry xml:id="expr.possessive_pattern" formality="neutral" polarity="neutral">
+        <form>[X]의 [관계명사]</form>
+        <note>생산적 패턴. 개별 표현이 아닌 구문 규칙으로 처리.</note>
+        <example src="운수_좋은_날" loc="118">"그의 친구 치삼이가" (서술자, KC 경유→CS)</example>
+        <example src="운수_좋은_날" loc="103">"제자식 뻘밖에 안되는 어린 손님" (서술자→HS)</example>
+      </entry>
+    </category>
+  </category>
+
+  <!-- ==================== 4. 대화 호격 (address) ==================== -->
+  <category xml:id="address">
+    <catDesc>대화 호격: 대화 중 상대를 직접 부르는 표현. said[@who] 내부에서만 출현.</catDesc>
+
+    <category xml:id="address.intimate">
+      <catDesc>친밀·하대 호격</catDesc>
+      <entry xml:id="expr.yeoboge" formality="informal" polarity="positive">
+        <form>여보게</form>
+        <note>동년배 친구 간 친밀한 호격</note>
+        <example src="운수_좋은_날" loc="119">"여보게 김 첨지" (CS→KC)</example>
+      </entry>
+      <entry xml:id="expr.inom_addr" formality="vulgar" polarity="ambivalent">
+        <form>이놈(아)</form>
+        <type>pronoun.second</type>
+        <type>address.intimate</type>
+        <type>invective.derogatory</type>
+        <note>
+          핵심 다의어. 동일 형태가 address.intimate / invective.derogatory 모두 가능.
+          v3에서 맥락 규칙으로 분리.
+        </note>
+        <contextRule>
+          <condition context="relation[@name='friendship'] AND said[@who=speaker]">
+            category→address.intimate, polarity→positive (친밀한 욕)
+            <!-- "이놈아, 사십 전이 그리 끔찍하냐" (KC→CS) -->
+          </condition>
+          <condition context="social-hierarchy-above AND polarity-context=anger">
+            category→invective.derogatory, polarity→negative (실제 비하)
+            <!-- "이놈, 오라질 놈, 왜 술을 붓지 않어" (KC→JD) -->
+          </condition>
+          <condition context="self-reference">
+            category→invective.derogatory, polarity→negative (자기 비하)
+            <!-- "내가 죽일 놈이야" (KC→KC) -->
+          </condition>
+        </contextRule>
+        <example src="운수_좋은_날" loc="127">"이놈아, 사십 전이 그리 끔찍하냐" (KC→CS, 친밀)</example>
+        <example src="운수_좋은_날" loc="131">"이놈, 오라질 놈" (KC→JD, 비하)</example>
+        <example src="운수_좋은_날" loc="143">"이놈아 언제는" (KC→CS, 친밀)</example>
+      </entry>
+    </category>
+
+    <category xml:id="address.neutral">
+      <catDesc>중립 호격</catDesc>
+      <entry xml:id="expr.isaram" formality="neutral" polarity="neutral">
+        <form>이 사람</form>
+        <type>address.neutral</type>
+        <contextRule>
+          <condition context="mild-exasperation">polarity→mildly-negative</condition>
+          <condition context="neutral-reference">polarity→neutral</condition>
+        </contextRule>
+        <example src="운수_좋은_날" loc="130">"어, 이 사람 취했군" (CS→KC)</example>
+        <example src="운수_좋은_날" loc="150">"이 사람이 정말 미쳤단 말인가" (CS→KC, 약한 비난)</example>
+      </entry>
+    </category>
+
+    <category xml:id="address.respectful">
+      <catDesc>존대 호격</catDesc>
+      <!-- "아씨" → social.status에서 contextRule로 분기 -->
+    </category>
+
+    <category xml:id="address.dialect">
+      <catDesc>방언 호격</catDesc>
+      <!-- 님자, 아즈바니 등 → pronoun.second 또는 kinship에서 dialectRegion 속성으로 처리 -->
+    </category>
+  </category>
+
+  <!-- ==================== 5. 묘사적 지칭 (epithet) ==================== -->
+  <category xml:id="epithet">
+    <catDesc>묘사적 지칭: 인물의 상태·행위·외양에 기반한 표현</catDesc>
+
+    <category xml:id="epithet.state">
+      <catDesc>상태 묘사 (신체적·정신적 상태)</catDesc>
+      <entry xml:id="expr.hwanja" formality="neutral" polarity="negative" animacy="animate">
+        <form>환자</form>
+        <example src="운수_좋은_날" loc="161">"환자의 머리를 꺼들어" (서술자→AW)</example>
+      </entry>
+      <entry xml:id="expr.byeongja" formality="neutral" polarity="negative" animacy="animate">
+        <form>병자</form>
+        <example src="운수_좋은_날" loc="101">"병자의 움쑥 들어간 눈" (서술자→AW)</example>
+      </entry>
+      <entry xml:id="expr.jujeongkkun" formality="informal" polarity="negative" animacy="animate">
+        <form>주정꾼</form>
+        <relation type="intensifiesFrom" target="#expr.chwihan_i"/>
+        <example src="운수_좋은_날" loc="131">"주정꾼이 눈치를 알아보고" (서술자→KC)</example>
+      </entry>
+      <entry xml:id="expr.chwihan_i" formality="neutral" polarity="negative" animacy="animate">
+        <form>취한 이</form>
+        <relation type="intensifiesTo" target="#expr.jujeongkkun"/>
+        <example src="운수_좋은_날" loc="131">"취한 이는 부르짖었다" (서술자→KC)</example>
+      </entry>
+
+      <!-- 존재론적 상태: 미해결 항목 ① 반영 -->
+      <entry xml:id="expr.san_saram" formality="neutral" polarity="neutral" animacy="animate" 
+             subtype="existential">
+        <form>산 사람</form>
+        <note>생존 상태 표지. 죽은 이와의 대비 구조에서 출현.</note>
+        <relation type="antonym" target="#expr.jugeun_i"/>
+        <example src="운수_좋은_날" loc="167">"산 사람의 눈에서" (서술자→KC)</example>
+      </entry>
+      <entry xml:id="expr.jugeun_i" formality="neutral" polarity="negative" animacy="deceased"
+             subtype="existential">
+        <form>죽은 이</form>
+        <relation type="antonym" target="#expr.san_saram"/>
+        <example src="운수_좋은_날" loc="167">"죽은 이의 뻣뻣한 얼굴" (서술자→AW)</example>
+      </entry>
+      <entry xml:id="expr.songjang" formality="informal" polarity="negative" animacy="deceased"
+             subtype="existential">
+        <form>송장</form>
+        <type>epithet.state</type>
+        <type>invective.objectifying</type>
+        <note>사물화 뉘앙스 포함 — animacy가 deceased이면서 objectified 경계</note>
+        <contextRule>
+          <condition context="narrator-neutral-description">animacy→deceased, polarity→neutral</condition>
+          <condition context="character-speech-dismissive">animacy→objectified, polarity→negative</condition>
+        </contextRule>
+        <example src="감자">"복녀의 송장은 사흘이 지나도록" (서술자→BG)</example>
+      </entry>
+    </category>
+
+    <category xml:id="epithet.action">
+      <catDesc>행위 묘사 (현재 수행 중인 동작 기반)</catDesc>
+      <entry xml:id="expr.kkeuneun_i" formality="neutral" polarity="neutral">
+        <form>끄는 이</form>
+        <note>인력거를 끄는 행위 기반. 직업(social.occupation)과 중첩 가능하나 일시적 행위 초점.</note>
+        <example src="운수_좋은_날" loc="101">"끄는 이의 다리는 무거워졌다" (서술자→KC)</example>
+      </entry>
+      <entry xml:id="expr.tan_i" formality="neutral" polarity="neutral">
+        <form>탄 이</form>
+        <example src="운수_좋은_날" loc="101">"탄 이의 초조한 부르짖음" (서술자→HS)</example>
+      </entry>
+      <entry xml:id="expr.unneun_i" formality="neutral" polarity="negative">
+        <form>우는 이</form>
+        <example src="운수_좋은_날" loc="146">"우는 이의 팔을 잡아당기었다" (서술자→KC)</example>
+      </entry>
+      <entry xml:id="expr.usneun_i" formality="neutral" polarity="positive">
+        <form>웃는 이</form>
+        <example src="운수_좋은_날" loc="134">"웃는 이는 더욱 웃으며" (서술자→KC)</example>
+      </entry>
+      <entry xml:id="expr.nuun_i" formality="neutral" polarity="negative" animacy="ambiguous">
+        <form>누운 이</form>
+        <note>생존/사망 모호 — 작품 맥락에서 점진적으로 deceased로 전환</note>
+        <example src="운수_좋은_날" loc="160">"누운 이의 다리를 몹시 찼다" (서술자→AW)</example>
+        <example src="운수_좋은_날" loc="167">"누운 이의 흰 창을 덮은" (서술자→AW)</example>
+      </entry>
+    </category>
+
+    <category xml:id="epithet.appearance">
+      <catDesc>외양 묘사</catDesc>
+      <entry xml:id="expr.ttungttungbo" formality="informal" polarity="neutral">
+        <form>뚱뚱보</form>
+        <relation type="contrastPair" target="#expr.malakkaengi"/>
+        <example src="운수_좋은_날" loc="120">"뚱뚱보는 말라깽이를 보든 맡에" (서술자→CS)</example>
+      </entry>
+      <entry xml:id="expr.malakkaengi" formality="informal" polarity="neutral">
+        <form>말라깽이</form>
+        <relation type="contrastPair" target="#expr.ttungttungbo"/>
+        <example src="운수_좋은_날" loc="120">"뚱뚱보는 말라깽이를" (서술자→KC)</example>
+      </entry>
+    </category>
+
+    <category xml:id="epithet.figurative">
+      <catDesc>비유적 묘사: 직유·은유·풍자적 표현</catDesc>
+      <note>미해결 항목 ② 반영: 현진건의 풍자·반어 문체 처리.
+        비유적 묘사는 화자의 수사적 의도를 포함하므로 polarity가 표면/실질 이중 구조일 수 있음.</note>
+      <entry xml:id="expr.muldoge_ppajin" formality="informal" polarity="negative"
+             subtype="simile">
+        <form>물독에 빠진 새앙쥐</form>
+        <note>직유(같은가?). 비참한 외양 묘사. 친구 간 농담조.</note>
+        <example src="운수_좋은_날" loc="122">"물독에 빠진 새앙쥐 같은가?" (CS→KC)</example>
+      </entry>
+      <entry xml:id="expr.gugeolhaneun_geoji" formality="informal" polarity="negative"
+             subtype="simile">
+        <form>구걸하는 거지</form>
+        <note>직유(무엇같이). 서술자의 김 첨지 행동 묘사.</note>
+        <example src="운수_좋은_날" loc="109">"구걸하는 거지나 무엇같이" (서술자→KC)</example>
+      </entry>
+      <entry xml:id="expr.nanbong_yeohaksaeng" formality="informal" polarity="negative"
+             subtype="ironic">
+        <form>난봉 여학생인 듯한 여편네</form>
+        <note>서술자/김첨지 시점의 풍자적 묘사. 
+          겉으로는 사회적 지칭(여학생)이나 실질은 비하적 평가.
+          polarity: surface=neutral, actual=negative</note>
+        <example src="운수_좋은_날" loc="107">"난봉 여학생인 듯한 여편네" (서술자→FS)</example>
+      </entry>
+    </category>
+
+    <category xml:id="epithet.age_description">
+      <catDesc>나이 묘사 지칭</catDesc>
+      <entry xml:id="expr.se_sal_meogi" formality="neutral" polarity="neutral">
+        <form>세 살먹이</form>
+        <example src="운수_좋은_날">"개똥이(세 살먹이)" (서술자→GD)</example>
+      </entry>
+      <entry xml:id="expr.yeol_daseot_sal" formality="neutral" polarity="neutral">
+        <form>열 다섯 살 됨직한</form>
+        <example src="운수_좋은_날" loc="131">"열 다섯 살 됨직한 중대가리" (서술자→JD)</example>
+      </entry>
+    </category>
+  </category>
+
+  <!-- ==================== 6. 욕설·비하 지칭 (invective) ==================== -->
+  <category xml:id="invective">
+    <catDesc>욕설·비하 지칭: 모욕·저주·비하 의도의 표현</catDesc>
+
+    <category xml:id="invective.curse">
+      <catDesc>저주형 욕설: [저주 관형구] + [비하 명사] 구조</catDesc>
+      <entry xml:id="expr.orajil_nyeon" formality="vulgar" polarity="negative" genderSpec="feminine">
+        <form>오라질 년</form>
+        <relation type="intensifiesFrom" target="#expr.inyeon"/>
+        <example src="운수_좋은_날" loc="149">"그 오라질 년이 밥을 죽이지" (KC→AW)</example>
+        <example src="운수_좋은_날" loc="157">"이 오라질 년" (KC→AW)</example>
+      </entry>
+      <entry xml:id="expr.nanjang_majeul_nyeon" formality="vulgar" polarity="negative" genderSpec="feminine">
+        <form>난장 맞을 년</form>
+        <example src="운수_좋은_날" loc="157">"이 난장 맞을 년" (KC→AW)</example>
+      </entry>
+      <entry xml:id="expr.orajil_nom" formality="vulgar" polarity="negative" genderSpec="masculine">
+        <form>오라질 놈</form>
+        <example src="운수_좋은_날" loc="131">"이놈, 오라질 놈" (KC→JD)</example>
+      </entry>
+    </category>
+
+    <category xml:id="invective.derogatory">
+      <catDesc>비하형 표현</catDesc>
+      <entry xml:id="expr.jugil_nom" formality="vulgar" polarity="negative">
+        <form>죽일 놈</form>
+        <type>invective.derogatory</type>
+        <contextRule>
+          <condition context="self-reference">자기 비하/자책</condition>
+          <condition context="other-reference">타인 비하/위협</condition>
+        </contextRule>
+        <example src="운수_좋은_날" loc="145">"내가 죽일 놈이야" (KC→KC, 자기비하)</example>
+      </entry>
+      <entry xml:id="expr.michin_nom" formality="vulgar" polarity="negative">
+        <form>미친 놈</form>
+        <example src="운수_좋은_날" loc="144">"엑기 미친 놈" (CS→KC)</example>
+      </entry>
+      <entry xml:id="expr.inyeon" formality="vulgar" polarity="negative" genderSpec="feminine">
+        <form>이년</form>
+        <relation type="intensifiesTo" target="#expr.orajil_nyeon"/>
+        <example src="운수_좋은_날" loc="164">"이년아, 죽었단 말이냐" (KC→AW)</example>
+      </entry>
+    </category>
+
+    <category xml:id="invective.dismissive">
+      <catDesc>경시·무시형 표현</catDesc>
+      <entry xml:id="expr.jobap_mot_meongneun" formality="vulgar" polarity="negative" genderSpec="feminine">
+        <form>조밥도 못 먹는 년</form>
+        <note>경제적 무능력에 대한 경시 + 성별 비하</note>
+      </entry>
+    </category>
+
+    <category xml:id="invective.objectifying">
+      <catDesc>사물화 표현: 인물을 사물 취급하는 극단적 비하</catDesc>
+      <entry xml:id="expr.ikkajit_geot" formality="vulgar" polarity="negative" animacy="objectified">
+        <form>이까짓 것</form>
+        <note>인물을 '것'으로 지칭 — 인격 박탈의 극단</note>
+        <example src="감자">"이까짓 것" (BG→WSB_W)</example>
+      </entry>
+    </category>
+  </category>
+
+  <!-- ==================== 7. 집합 지칭 (group) ==================== -->
+  <category xml:id="group">
+    <catDesc>집합 지칭: 둘 이상의 인물을 동시에 가리키는 표현</catDesc>
+
+    <category xml:id="group.inclusive_we">
+      <catDesc>포괄적 '우리' (화자 + 청자 포함)</catDesc>
+      <entry xml:id="expr.uri_inclusive" formality="neutral" polarity="neutral">
+        <form>우리</form>
+        <contextRule>
+          <condition context="speaker+addressee included">category→group.inclusive_we</condition>
+          <condition context="speaker's family/group">category→group.possessive_we</condition>
+        </contextRule>
+        <example src="운수_좋은_날" loc="126">"우리가 넉 잔씩 먹었네" (CS, KC+CS)</example>
+      </entry>
+    </category>
+
+    <category xml:id="group.possessive_we">
+      <catDesc>소유적 '우리' (화자의 가족·소속을 포괄)</catDesc>
+      <entry xml:id="expr.uri_manura" formality="informal" polarity="neutral">
+        <form>우리 마누라</form>
+        <note>"우리" + 친족명사 결합 패턴. 한국어 특유의 소유적 우리.</note>
+        <example src="운수_좋은_날" loc="141">"우리 마누라가 죽었다네" (KC, KC+AW)</example>
+      </entry>
+    </category>
+
+    <category xml:id="group.third_person_plural">
+      <catDesc>3인칭 복수 지칭</catDesc>
+      <entry xml:id="expr.geudeul" formality="neutral" polarity="neutral">
+        <form>그들</form>
+      </entry>
+      <entry xml:id="expr.dul" formality="neutral" polarity="neutral">
+        <form>둘</form>
+      </entry>
+    </category>
+
+    <category xml:id="group.plural_epithet">
+      <catDesc>복수 묘사 지칭: 복수 대상에 대한 묘사적/비하적 표현</catDesc>
+      <entry xml:id="expr.orajil_nomdeul" formality="vulgar" polarity="negative">
+        <form>오라질 놈들</form>
+        <example src="운수_좋은_날" loc="131">"이 오라질 놈들 같으니" (KC→CS+JD)</example>
+      </entry>
+      <entry xml:id="expr.deoreoun_nomdeul" formality="vulgar" polarity="negative">
+        <form>더러운 놈들</form>
+        <example src="운수_좋은_날" loc="132">"이 더러운 놈들아" (KC→CS+JD)</example>
+      </entry>
+    </category>
+
+    <category xml:id="group.collective">
+      <catDesc>집단 지칭 (불특정 다수, personGrp)</catDesc>
+      <!-- 운수 좋은 날에서는 두드러지지 않음. 감자의 빈민굴 여인들 등이 해당. -->
+    </category>
+  </category>
+
+  <!--
+    ============================================================
+    PART C: 범주 간 관계 요약 (Cross-category Relations)
+    - entry 수준의 relation과 별도로, 범주 수준의 구조적 관계
+    ============================================================
+  -->
+  <desc type="crossCategoryRelations">
+    <!--
+      1. address ↔ invective 경계:
+         "이놈" — address.intimate(친밀) vs invective.derogatory(비하)
+         판별 기준: relation(화자-대상), said 맥락, 전후 화행
+      
+      2. social.status ↔ address.respectful 경계:
+         "아씨" — 서술자 묘사(social) vs 대화 호격(address)
+         판별 기준: said[@who] 내부 여부
+      
+      3. epithet.state ↔ epithet.action 경계:
+         "취한 이" — 상태(state) vs 행위 결과(action)
+         현재 결정: 상태로 분류 (일시적이지만 지속 상태)
+      
+      4. epithet.state[existential] ↔ invective.objectifying 경계:
+         "송장" — 사망 상태 묘사 vs 사물화 비하
+         판별 기준: 화자 의도 + 서술 맥락
+      
+      5. kinship ↔ kinship.fictive 판별:
+         "형님" — 실제 친족 vs 의사 친족
+         판별 기준: listPerson의 relation 정보 참조
+      
+      6. 비하 강도 계열(intensification chain):
+         이년 → 오라질 년 → 난장 맞을 년
+         놈 → 죽일 놈 → 오라질 놈
+         취한 이 → 주정꾼 → 주정뱅이
+      
+      7. 대비 쌍(contrast pair):
+         뚱뚱보 ↔ 말라깽이 (외양 대비)
+         산 사람 ↔ 죽은 이 (존재론적 대비)
+         끄는 이 ↔ 탄 이 (행위 역할 대비)
+    -->
+  </desc>
+
+</taxonomy>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://dh.aks.ac.kr/ontology/referring-expression"
+           xmlns:re="http://dh.aks.ac.kr/ontology/referring-expression"
+           elementFormDefault="qualified">
+
+  <!--
+    한국 근대문학 인물 지칭 표현 온톨로지 v4 — XSD 스키마
+    
+    v3 → v4 변경:
+    1. 필수 속성 축소: formality, polarity만 필수 (ambiguity 제거 — contextRule 유무로 판단)
+    2. 멀티라벨: entry가 복수의 type을 가질 수 있음 (형태적 분류 + 화용적 기능)
+    3. 골드 스탠다드는 ref만 — 범주 정보는 온톨로지에만 존재
+    
+    기반: 손춘섭(2010), 양영희(2009), 박정운(1997), 왕한석(2005)
+    확장: 대화 호격, 묘사적 지칭, 욕설·비하, 집합 지칭
+  -->
+
+  <!-- ========== 열거형 타입 ========== -->
+
+  <xs:simpleType name="formalityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="formal"/>
+      <xs:enumeration value="neutral"/>
+      <xs:enumeration value="informal"/>
+      <xs:enumeration value="vulgar"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="polarityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="positive"/>
+      <xs:enumeration value="neutral"/>
+      <xs:enumeration value="negative"/>
+      <xs:enumeration value="ambivalent"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="animacyType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="animate"/>
+      <xs:enumeration value="deceased"/>
+      <xs:enumeration value="objectified"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="dialectType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="standard"/>
+      <xs:enumeration value="pyeongan"/>
+      <xs:enumeration value="gyeongsang"/>
+      <xs:enumeration value="other"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="genderType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="masculine"/>
+      <xs:enumeration value="feminine"/>
+      <xs:enumeration value="unspecified"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="relationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="standardForm"/>
+      <xs:enumeration value="intensifiesTo"/>
+      <xs:enumeration value="intensifiesFrom"/>
+      <xs:enumeration value="antonym"/>
+      <xs:enumeration value="contrastPair"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- ========== 복합 타입 ========== -->
+
+  <!-- 속성: 필수 2개 + 선택 3개 -->
+  <xs:complexType name="propertyType">
+    <xs:attribute name="formality" type="re:formalityType" use="required"/>
+    <xs:attribute name="polarity"  type="re:polarityType"  use="required"/>
+    <xs:attribute name="animacy"   type="re:animacyType"   use="optional"/>
+    <xs:attribute name="dialect"   type="re:dialectType"   use="optional" default="standard"/>
+    <xs:attribute name="gender"    type="re:genderType"    use="optional" default="unspecified"/>
+  </xs:complexType>
+
+  <!-- 맥락 조건 -->
+  <xs:complexType name="conditionType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="context"         type="xs:string"           use="required"/>
+        <xs:attribute name="resultCategory"  type="xs:string"           use="optional"/>
+        <xs:attribute name="resultPolarity"  type="re:polarityType"     use="optional"/>
+        <xs:attribute name="resultFormality" type="re:formalityType"    use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- 맥락 의존 규칙 -->
+  <xs:complexType name="contextRuleType">
+    <xs:sequence>
+      <xs:element name="condition" type="re:conditionType" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- entry 간 관계 -->
+  <xs:complexType name="entryRelationType">
+    <xs:attribute name="type"   type="re:relationType" use="required"/>
+    <xs:attribute name="target" type="xs:IDREF"        use="required"/>
+  </xs:complexType>
+
+  <!-- 용례 -->
+  <xs:complexType name="exampleType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="src" type="xs:string" use="required"/>
+        <xs:attribute name="loc" type="xs:string" use="optional"/>
+        <xs:attribute name="who" type="xs:string" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <!-- 개별 entry — 멀티라벨: type을 복수 허용 -->
+  <xs:complexType name="entryType">
+    <xs:sequence>
+      <xs:element name="form"        type="xs:string"              minOccurs="1" maxOccurs="1"/>
+      <xs:element name="type"        type="xs:string"              minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element name="variant"     type="xs:string"              minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="note"        type="xs:string"              minOccurs="0" maxOccurs="1"/>
+      <xs:element name="property"    type="re:propertyType"        minOccurs="1" maxOccurs="1"/>
+      <xs:element name="contextRule" type="re:contextRuleType"     minOccurs="0" maxOccurs="1"/>
+      <xs:element name="relation"    type="re:entryRelationType"   minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="example"     type="re:exampleType"         minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:ID" use="required"/>
+  </xs:complexType>
+
+  <!-- 범주 (재귀) -->
+  <xs:complexType name="categoryType">
+    <xs:sequence>
+      <xs:element name="catDesc"  type="xs:string"        minOccurs="1" maxOccurs="1"/>
+      <xs:element name="note"     type="xs:string"        minOccurs="0" maxOccurs="1"/>
+      <xs:element name="category" type="re:categoryType"  minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="entry"    type="re:entryType"     minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id"     type="xs:ID"     use="required"/>
+    <xs:attribute name="source" type="xs:string"  use="optional"/>
+  </xs:complexType>
+
+  <!-- 루트 -->
+  <xs:complexType name="taxonomyType">
+    <xs:sequence>
+      <xs:element name="desc"     type="xs:string"        minOccurs="1" maxOccurs="1"/>
+      <xs:element name="category" type="re:categoryType"  minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id"      type="xs:ID"     use="required"/>
+    <xs:attribute name="version" type="xs:string"  use="required"/>
+  </xs:complexType>
+
+  <xs:element name="taxonomy" type="re:taxonomyType"/>
+
+</xs:schema>
